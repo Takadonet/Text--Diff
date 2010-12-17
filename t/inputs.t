@@ -12,20 +12,27 @@ BEGIN
 eval_lives_ok 'use Text::Diff', 'Can use Text::Diff';
 use Text::Diff;
 
-# my @A = map "$_\n", qw( 1 2 3 4 );
-# my @B = map "$_\n", qw( 1 2 3 5 );
+my @A = map {"$_\n"}, < 1 2 3 4 >;
+my @B = map {"$_\n"}, < 1 2 3 5 >;
 
-# my $A = join "", @A;
-# my $B = join "", @B;
+my $A = join "", @A;
+my $B = join "", @B;
 
-# my $Af = "io_A";
-# my $Bf = "io_B";
 
-# open A, ">$Af" or die $!; print A @A or die $! ; close A or die $! ;
-# open B, ">$Bf" or die $!; print B @B or die $! ; close B or die $! ;
+my $Af = "io_A";
+my $Bf = "io_B";
 
-# my @tests = (
-# sub { ok !diff \@A, \@A },
+my $fha = open("$Af", :w);
+
+my $fhb = open("$Bf", :w);
+
+
+$fha.close();
+$fhb.close();
+
+
+my @tests = (
+sub { ok !diff @A, @A },
 # sub {
 #     my $d = diff \@A, \@B;
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
@@ -62,11 +69,11 @@ use Text::Diff;
 #     my $d = diff sub { \@A }, sub { \@B };
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
 # },
-# );
+);
 
 # plan tests => scalar @tests;
 
-# $_->() for @tests;
+$_.() for @tests;
 
 # unlink "io_A" or warn $!;
 # unlink "io_B" or warn $!;

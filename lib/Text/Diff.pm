@@ -26,7 +26,7 @@ package Text::Diff {
 #     Table    => undef,   ## "internal", but in another module
 # );
 
-# sub diff {
+sub diff(*@a) is export {
 #     my @seqs    = ( shift, shift );
 #     my $options = shift || {};
 
@@ -174,7 +174,8 @@ package Text::Diff {
 #     $output_handler->( $style->file_footer( @seqs, $options ) ) if $hunks;
 
 #     return defined $output ? $output : $hunks;
-# }
+}
+
 
 # sub _header {
 #     my ( $h ) = @_;

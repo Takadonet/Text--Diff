@@ -1,27 +1,28 @@
-#!/usr/bin/perl
+# #!/usr/bin/perl
 
-# Test that our META.yml file matches the current specification.
+# # Test that our META.yml file matches the current specification.
 
-use strict;
-BEGIN {
-	$|  = 1;
-	$^W = 1;
-}
+# use strict;
 
-my $MODULE = 'Test::CPAN::Meta 0.12';
+# BEGIN {
+#     $|  = 1;
+#     $^W = 1;
+# }
 
-# Don't run tests for installs
-use Test::More;
-unless ( $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
-	plan( skip_all => "Author tests not required for installation" );
-}
+# my $MODULE = 'Test::CPAN::Meta 0.12';
 
-# Load the testing module
-eval "use $MODULE";
-if ( $@ ) {
-	$ENV{RELEASE_TESTING}
-	? die( "Failed to load required release-testing module $MODULE" )
-	: plan( skip_all => "$MODULE not available for testing" );
-}
+# # Don't run tests for installs
+# use Test::More;
+# unless ( $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
+#     plan( skip_all => "Author tests not required for installation" );
+# }
 
-meta_yaml_ok();
+# # Load the testing module
+# eval "use $MODULE";
+# if ($@) {
+#     $ENV{RELEASE_TESTING}
+#       ? die("Failed to load required release-testing module $MODULE")
+#       : plan( skip_all => "$MODULE not available for testing" );
+# }
+
+# meta_yaml_ok();

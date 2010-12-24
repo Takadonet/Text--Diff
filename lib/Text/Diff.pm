@@ -1,179 +1,131 @@
 package Text::Diff {
-
-# use 5.00503;
-# use strict;
-# use Carp;
-# use Exporter        ();
-# use Algorithm::Diff ();
-# use vars qw{$VERSION @ISA @EXPORT};
+use Text::Diff::OldStyle;
+use Algorithm::Diff;
 # BEGIN {
 # 	$VERSION = '1.37';
 # 	@ISA     = 'Exporter';
 # 	@EXPORT  = 'diff';
 # };
 
-# ## Hunks are made of ops.  An op is the starting index for each
-# ## sequence and the opcode:
-# use constant A       => 0;   # Array index before match/discard
-# use constant B       => 1;
-# use constant OPCODE  => 2;   # "-", " ", "+"
-# use constant FLAG    => 3;   # What to display if not OPCODE "!"
 
-# my %internal_styles = (
-#     Unified  => undef,
-#     Context  => undef,
-#     OldStyle => undef,
-#     Table    => undef,   ## "internal", but in another module
-# );
 
-sub diff(*@a) is export {
-#     my @seqs    = ( shift, shift );
-#     my $options = shift || {};
+my %internal_styles = (
+     Unified  => Mu,
+     Context  => Mu,
+     OldStyle => Mu,
+     Table    => Mu,   ## "internal", but in another module
+);
+#todo had to change fcn now since we have a collision with Algorithm::Diff diff fcn. 
+multi sub text_diff(@a, @b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
 
-#     for my $i ( 0 .. 1 ) {
-#         my $seq = $seqs[$i];
-# 	my $type = ref $seq;
+	## This is most efficient :)
+        %options{"OFFSET_A"} = 0
+        unless defined %options{"OFFSET_A"};
 
-#         while ( $type eq "CODE" ) {
-# 	    $seqs[$i] = $seq = $seq->( $options );
-# 	    $type = ref $seq;
-# 	}
+	%options{"OFFSET_B"} = 0
+        unless defined %options{"OFFSET_B"};
 
-# 	my $AorB = !$i ? "A" : "B";
-
-#         if ( $type eq "ARRAY" ) {
-#             ## This is most efficient :)
-#             $options->{"OFFSET_$AorB"} = 0
-#                 unless defined $options->{"OFFSET_$AorB"};
-#         }
-#         elsif ( $type eq "SCALAR" ) {
-#             $seqs[$i] = [split( /^/m, $$seq )];
-#             $options->{"OFFSET_$AorB"} = 1
-#                 unless defined $options->{"OFFSET_$AorB"};
-#         }
-#         elsif ( ! $type ) {
-#             $options->{"OFFSET_$AorB"} = 1
-#                 unless defined $options->{"OFFSET_$AorB"};
-# 	    $options->{"FILENAME_$AorB"} = $seq
-# 	        unless defined $options->{"FILENAME_$AorB"};
-# 	    $options->{"MTIME_$AorB"} = (stat($seq))[9]
-# 	        unless defined $options->{"MTIME_$AorB"};
-
-#             local $/ = "\n";
-#             open F, "<$seq" or carp "$!: $seq";
-#             $seqs[$i] = [<F>];
-#             close F;
-
-#         }
-#         elsif ( $type eq "GLOB" || UNIVERSAL::isa( $seq, "IO::Handle" ) ) {
-#             $options->{"OFFSET_$AorB"} = 1
-#                 unless defined $options->{"OFFSET_$AorB"};
-#             local $/ = "\n";
-#             $seqs[$i] = [<$seq>];
-#         }
-#         else {
-#             confess "Can't handle input of type ", ref;
-#         }
-#     }
-
-#     ## Config vars
-#     my $output;
-#     my $output_handler = $options->{OUTPUT};
-#     my $type = ref $output_handler ;
-#     if ( ! defined $output_handler ) {
-#         $output = "";
-#         $output_handler = sub { $output .= shift };
-#     }
-#     elsif ( $type eq "CODE" ) {
-#         ## No problems, mate.
-#     }
-#     elsif ( $type eq "SCALAR" ) {
-#         my $out_ref = $output_handler;
-#         $output_handler = sub { $$out_ref .= shift };
-#     }
-#     elsif ( $type eq "ARRAY" ) {
-#         my $out_ref = $output_handler;
-#         $output_handler = sub { push @$out_ref, shift };
-#     }
+	## Config vars
+	my $output;
+	my $output_handler = %options{'OUTPUT'};
+	my $type = $output_handler.WHAT ;
+	if  ! defined $output_handler  {
+		$output = "";
+		$output_handler = sub { $output ~= shift @_ };
+	}
+	elsif ( $type eq "CODE" ) {
+		## No problems, mate.
+	}
+	elsif ( $type eq "SCALAR" ) {
+		say 'nyi for scalar output';
+#		my $out_ref = $output_handler;
+#		$output_handler = sub { $$out_ref .= shift };
+	}
+	elsif ( $type eq "ARRAY" ) {
+		my $out_ref = $output_handler;
+		$output_handler = sub { push @($out_ref), shift @_ };
+	}
 #     elsif ( $type eq "GLOB" || UNIVERSAL::isa $output_handler, "IO::Handle" ) {
 #         my $output_handle = $output_handler;
 #         $output_handler = sub { print $output_handle shift };
 #     }
-#     else {
-#         croak "Unrecognized output type: $type";
-#     }
+	else {
+		die "Unrecognized output type: $type";
+	}
 
-#     my $style  = $options->{STYLE};
-#     $style = "Unified" unless defined $options->{STYLE};
-#     $style = "Text::Diff::$style" if exists $internal_styles{$style};
+	my $style  = %options{'STYLE'};
+	$style = "Unified" unless defined %options{'STYLE'};
+	$style = "Text::Diff::$style" if %internal_styles.exists($style);
 
-#     if ( ! $style->can( "hunk" ) ) {
-# 	eval "require $style; 1" or die $@;
-#     }
+	#todo do not think the if statement below is working correctly
+	if  ! $style.can( "hunk" )  {
+		#eval "require $style; 1" or die $@;
+		require $style or die "Cannot import hunk";
 
-#     $style = $style->new
-# 	if ! ref $style && $style->can( "new" );
+	}
+	$style = $style.eval.new();
+#	if ! ref $style && $style.can( "new" );
+	my $ctx_lines = %options.{'CONTEXT'};
+	$ctx_lines = 3 unless defined $ctx_lines;
+	$ctx_lines = 0 if $style ~~ Text::Diff::OldStyle;
 
-#     my $ctx_lines = $options->{CONTEXT};
-#     $ctx_lines = 3 unless defined $ctx_lines;
-#     $ctx_lines = 0 if $style->isa( "Text::Diff::OldStyle" );
+	my @keygen_args = %options.{'KEYGEN_ARGS'}
+		?? @(%options.{'KEYGEN_ARGS'})
+		!! ();
 
-#     my @keygen_args = $options->{KEYGEN_ARGS}
-#         ? @{$options->{KEYGEN_ARGS}}
-#         : ();
+	## State vars
+	my $diffs = 0; ## Number of discards this hunk
+	my $ctx   = 0; ## Number of " " (ctx_lines) ops pushed after last diff.
+	my @ops;       ## ops (" ", +, -) in this hunk
+	my $hunks = 0; ## Number of hunks
 
-#     ## State vars
-#     my $diffs = 0; ## Number of discards this hunk
-#     my $ctx   = 0; ## Number of " " (ctx_lines) ops pushed after last diff.
-#     my @ops;       ## ops (" ", +, -) in this hunk
-#     my $hunks = 0; ## Number of hunks
+	my $emit_ops = sub {
+		$output_handler.( $style.file_header( @a,@b, %options ) )
+ 	    		unless $hunks++;
+		$output_handler.( $style.hunk_header( @a,@b, %options, @_  ) );
+		$output_handler.( $style.hunk( @a,@b,  %options ,@_ ) );
+		$output_handler.( $style.hunk_footer( @a,@b, %options ,@_ ) );
+	};
 
-#     my $emit_ops = sub {
-#         $output_handler->( $style->file_header( @seqs,     $options ) )
-# 	    unless $hunks++;
-#         $output_handler->( $style->hunk_header( @seqs, @_, $options ) );
-#         $output_handler->( $style->hunk       ( @seqs, @_, $options ) );
-#         $output_handler->( $style->hunk_footer( @seqs, @_, $options ) );
-#     };
+	## We keep 2*ctx_lines so that if a diff occurs
+	## at 2*ctx_lines we continue to grow the hunk instead
+	## of emitting diffs and context as we go. We
+	## need to know the total length of both of the two
+	## subsequences so the line count can be printed in the
+	## header.
+        my $dis_a = sub { push @ops,[@_[0],@_[1],'-']; ++$diffs ; $ctx = 0 };
+        my $dis_b = sub { push @ops,[@_[0],@_[1],'+']; ++$diffs ; $ctx = 0 };
 
-#     ## We keep 2*ctx_lines so that if a diff occurs
-#     ## at 2*ctx_lines we continue to grow the hunk instead
-#     ## of emitting diffs and context as we go. We
-#     ## need to know the total length of both of the two
-#     ## subsequences so the line count can be printed in the
-#     ## header.
-#     my $dis_a = sub {push @ops, [@_[0,1],"-"]; ++$diffs ; $ctx = 0 };
-#     my $dis_b = sub {push @ops, [@_[0,1],"+"]; ++$diffs ; $ctx = 0 };
+	#todo might change Algorithm::Diff so traverse_sequence does not export without being asked for
+	#Algorithm::Diff::traverse_sequences(
+	traverse_sequences(
+	#NB was @seqs before and it would had flatten out , so should be fine with what below in p6
+	@a,@b,
+#	%options{'KEYGEN'},  # pass in user arguments for key gen function
+		MATCH => sub {
+                    push @ops,[@_[0..1]," "];
+                    
+                    if  $diffs && ++$ctx > $ctx_lines * 2  {
+                        #$emit_ops->( [ splice @ops, 0, $#ops - $ctx_lines ] );
+                        $ctx = $diffs = 0;
+                    }
 
-#     Algorithm::Diff::traverse_sequences(
-#         @seqs,
-#         {
-#             MATCH => sub {
-#                 push @ops, [@_[0,1]," "];
-
-#                 if ( $diffs && ++$ctx > $ctx_lines * 2 ) {
-#         	   $emit_ops->( [ splice @ops, 0, $#ops - $ctx_lines ] );
-#         	   $ctx = $diffs = 0;
-#                 }
-
-#                 ## throw away context lines that aren't needed any more
-#                 shift @ops if ! $diffs && @ops > $ctx_lines;
-#             },
-#             DISCARD_A => $dis_a,
-#             DISCARD_B => $dis_b,
-#         },
-#         $options->{KEYGEN},  # pass in user arguments for key gen function
-#         @keygen_args,
-#     );
-
-#     if ( $diffs ) {
+	            ## throw away context lines that aren't needed any more
+                    shift @ops if ! $diffs && @ops.elems() > $ctx_lines;
+		},
+		DISCARD_A => $dis_a,
+		DISCARD_B => $dis_b
+	#@keygen_args,
+	);
+        
+	if  defined $diffs  {
 #         $#ops -= $ctx - $ctx_lines if $ctx > $ctx_lines;
-#         $emit_ops->( \@ops );
-#     }
+         $emit_ops.( @ops );
+	}
 
-#     $output_handler->( $style->file_footer( @seqs, $options ) ) if $hunks;
+	$output_handler.( $style.file_footer( @a,@b, %options ) ) if $hunks;
 
-#     return defined $output ? $output : $hunks;
+	return defined $output ?? $output !! $hunks;
 }
 
 
@@ -242,59 +194,6 @@ sub diff(*@a) is export {
 #     return ( $op_sym, $seqs->[$a_or_b][$op->[$a_or_b]] );
 # }
 
-# SCOPE: {
-#     package Text::Diff::Base;
-
-#     sub new         {
-#         my $proto = shift;
-# 	return bless { @_ }, ref $proto || $proto;
-#     }
-
-#     sub file_header { return "" }
-
-#     sub hunk_header { return "" }
-
-#     sub hunk        { return "" }
-
-#     sub hunk_footer { return "" }
-
-#     sub file_footer { return "" }
-# }
-
-# @Text::Diff::Unified::ISA = qw( Text::Diff::Base );
-
-# sub Text::Diff::Unified::file_header {
-#     shift; ## No instance data
-#     my $options = pop ;
-
-#     _header(
-#         { FILENAME_PREFIX_A => "---", FILENAME_PREFIX_B => "+++", %$options }
-#     );
-# }
-
-# sub Text::Diff::Unified::hunk_header {
-#     shift; ## No instance data
-#     pop; ## Ignore options
-#     my $ops = pop;
-
-#     return join( "",
-#         "@@ -",
-#         _range( $ops, A, "unified" ),
-#         " +",
-#         _range( $ops, B, "unified" ),
-#         " @@\n",
-#     );
-# }
-
-# sub Text::Diff::Unified::hunk {
-#     shift; ## No instance data
-#     pop; ## Ignore options
-#     my $ops = pop;
-
-#     my $prefixes = { "+" => "+", " " => " ", "-" => "-" };
-
-#     return join "", map _op_to_line( \@_, $_, undef, $prefixes ), @$ops
-# }
 
 # @Text::Diff::Context::ISA = qw( Text::Diff::Base );
 
@@ -389,6 +288,21 @@ sub diff(*@a) is export {
 
 }
 
+
+
+role Text::Diff::Base {
+
+	sub file_header { ... }
+
+	sub hunk_header { ... }
+
+	sub hunk        { ... }
+
+	sub hunk_footer { ... }
+
+	sub file_footer { ... }
+
+}
 
 
 =begin

@@ -32,41 +32,48 @@ $fhb.close();
 
 
 my @tests = (
-sub { ok !diff @A, @A },
+#sub { ok !text_diff @A, @A },
+sub {
+     my $d = text_diff @A, @B;
+     #really need to fix this ugly....
+     if $d ~~ /\-4.*\+5/ {
+         pass('a valid diff');
+     }
+     else {
+         ok(0 == 1,'Did not find a diff');
+     }
+     
+},
+# sub { ok !text_diff \$A, \$A },
 # sub {
-#     my $d = diff \@A, \@B;
+#     my $d = text_diff \$A, \$B;
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
 # },
-# sub { ok !diff \$A, \$A },
+# sub { ok !text_diff $Af, $Af },
 # sub {
-#     my $d = diff \$A, \$B;
-#     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
-# },
-# sub { ok !diff $Af, $Af },
-# sub {
-#     my $d = diff $Af, $Bf;
+#     my $d = text_diff $Af, $Bf;
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
 # },
 # sub { 
 #     open A1, "<$Af" or die $!;
 #     open A2, "<$Af" or die $!;
-#     ok !diff \*A1, \*A2;
+#     ok !text_diff \*A1, \*A2;
 #     close A1;
 #     close A2;
 # },
 # sub { 
 #     open A, "<$Af" or die $!;
 #     open B, "<$Bf" or die $!;
-#     my $d = diff \*A, \*B;
+#     my $d = text_diff \*A, \*B;
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
 #     close A;
 #     close B;
 # },
 # sub {
-#     ok !diff sub { \@A}, sub { \@A };
+#     ok !text_diff sub { \@A}, sub { \@A };
 # },
 # sub {
-#     my $d = diff sub { \@A }, sub { \@B };
+#     my $d = text_diff sub { \@A }, sub { \@B };
 #     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
 # },
 );

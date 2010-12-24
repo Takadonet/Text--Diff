@@ -46,11 +46,18 @@ sub {
      }
      
 },
-# sub { ok !text_diff \$A, \$A },
-# sub {
-#     my $d = text_diff \$A, \$B;
-#     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
-# },
+sub {
+    ok !(text_diff $A, $A),'no Diff';
+},
+sub {
+    my $d = text_diff $A, $B;
+    if $d ~~ /\-4.*\+5/ {
+        pass('a valid diff');
+    }
+    else {
+        ok(0 == 1,'Did not find a diff');
+    }
+},
 # sub { ok !text_diff $Af, $Af },
 # sub {
 #     my $d = text_diff $Af, $Bf;

@@ -1,5 +1,6 @@
 package Text::Diff {
 use Text::Diff::OldStyle;
+use Text::Diff::Unified;
 use Algorithm::Diff;
 # BEGIN {
 # 	$VERSION = '1.37';
@@ -15,8 +16,19 @@ my %internal_styles = (
      OldStyle => Mu,
      Table    => Mu,   ## "internal", but in another module
 );
+
+multi sub text_diff($a,$b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+    #quick and dirty way till i find a new signature that will do it for me
+    #also added the split probably bite me back later but it's making more tests pass
+    #todo fix me phil
+    my @a=$a.split("\n");
+    my @b=$b.split("\n");
+
+    return text_diff(@a,@b,%options);
+}
+    
 #todo had to change fcn now since we have a collision with Algorithm::Diff diff fcn. 
-multi sub text_diff(@a, @b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+multi sub text_diff(@a,@b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
 
 	## This is most efficient :)
         %options{"OFFSET_A"} = 0

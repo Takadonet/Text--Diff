@@ -32,7 +32,9 @@ $fhb.close();
 
 
 my @tests = (
-#sub { ok !text_diff @A, @A },
+sub {
+    ok !(text_diff @A, @A),'no diff';
+},
 sub {
      my $d = text_diff @A, @B;
      #really need to fix this ugly....

@@ -118,7 +118,7 @@ multi sub text_diff(@a, @b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
 	#@keygen_args,
 	);
         
-	if  defined $diffs  {
+	if  $diffs != 0  {
 #         $#ops -= $ctx - $ctx_lines if $ctx > $ctx_lines;
          $emit_ops.( @ops );
 	}

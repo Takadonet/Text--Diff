@@ -23,9 +23,9 @@ my $Af = "io_A";
 my $Bf = "io_B";
 
 my $fha = open("$Af", :w);
-
 my $fhb = open("$Bf", :w);
-
+$fha.print(@A);
+$fhb.print(@B);
 
 $fha.close();
 $fhb.close();
@@ -42,7 +42,7 @@ sub {
          pass('a valid diff');
      }
      else {
-         ok(0 == 1,'Did not find a diff');
+         flunk('Did not find a diff');
      }
      
 },
@@ -55,14 +55,19 @@ sub {
         pass('a valid diff');
     }
     else {
-        ok(0 == 1,'Did not find a diff');
+        flunk('Did not find a diff');
     }
 },
-# sub { ok !text_diff $Af, $Af },
-# sub {
-#     my $d = text_diff $Af, $Bf;
-#     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
-# },
+sub { ok !(text_diff_file $Af, $Af), 'no Diff' },
+ sub {
+     my $d = text_diff_file($Af, $Bf);
+     if $d ~~ /\-4.*\+5/ {
+         pass('a valid diff');
+     }
+     else {
+         flunk('Did not find a diff');
+     }     
+ },
 # sub { 
 #     open A1, "<$Af" or die $!;
 #     open A2, "<$Af" or die $!;

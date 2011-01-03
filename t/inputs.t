@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 275;
+plan 11;
 BEGIN
 {
     @*INC.push('lib');
@@ -36,14 +36,14 @@ sub {
     ok !(text_diff @A, @A),'no diff';
 },
 sub {
-     my $d = text_diff @A, @B;
-     #really need to fix this ugly....
-     if $d ~~ /\-4.*\+5/ {
-         pass('a valid diff');
-     }
-     else {
-         flunk('Did not find a diff');
-     }
+    my $d = text_diff @A, @B;
+    #really need to fix this ugly....
+    if $d ~~ /\-4.*\+5/ {
+        pass('a valid diff');
+    }
+    else {
+        flunk('Did not find a diff');
+    }
      
 },
 sub {
@@ -59,23 +59,23 @@ sub {
     }
 },
 sub { ok !(text_diff_file $Af, $Af), 'no Diff' },
- sub {
-     my $d = text_diff_file($Af, $Bf);
-     if $d ~~ /\-4.*\+5/ {
-         pass('a valid diff');
-     }
-     else {
-         flunk('Did not find a diff');
-     }     
- },
 sub {
-my $fha = open("$Af", :r);
-my $fha2 = open("$Af", :r);
-#passing file handles    
-ok !text_diff $fha, $fha2;
-
-$fha.close();
-$fha2.close(); 
+    my $d = text_diff_file($Af, $Bf);
+    if $d ~~ /\-4.*\+5/ {
+        pass('a valid diff');
+    }
+    else {
+        flunk('Did not find a diff');
+    }     
+},
+sub {
+    my $fha = open("$Af", :r);
+    my $fha2 = open("$Af", :r);
+    #passing file handles    
+    ok !text_diff $fha, $fha2;
+    
+    $fha.close();
+    $fha2.close(); 
 },
 sub {
     my $fha = open("$Af", :r);
@@ -92,18 +92,23 @@ sub {
 $fha.close();
 $fhb.close();     
 },
-# sub {
-#     ok !text_diff sub { \@A}, sub { \@A };
-# },
-# sub {
-#     my $d = text_diff sub { \@A }, sub { \@B };
-#     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
-# },
+sub {
+    ok !text_diff sub { @A}, sub { @A };
+},
+sub {
+    my $d = text_diff sub { @A }, sub { @B };
+    if $d ~~ /\-4.*\+5/ {
+        pass('a valid diff');
+    }
+    else {
+        flunk('Did not find a diff');
+    }     
+},
 );
 
 # plan tests => scalar @tests;
 
 $_.() for @tests;
 
-# unlink "io_A" or warn $!;
-# unlink "io_B" or warn $!;
+ unlink $Af;
+ unlink $Bf;

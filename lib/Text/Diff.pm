@@ -17,6 +17,7 @@ my %internal_styles = (
      Table    => Mu,   ## "internal", but in another module
 );
 
+
 multi sub text_diff($a,$b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
     #quick and dirty way till i find a new signature that will do it for me
     #also added the split probably bite me back later but it's making more tests pass
@@ -32,6 +33,14 @@ multi sub text_diff(IO $a,IO $b,%options? = {'KEYGEN' => sub (*@a) {} }) is expo
     my @b=$b.lines();
     @a= @a >>~>> "\n";
     @b= @b >>~>> "\n";    
+    
+    return text_diff(@a,@b,%options);    
+}    
+
+
+multi sub text_diff(Code $a,Code $b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+    my @a=$a.();
+    my @b=$b.();
     
     return text_diff(@a,@b,%options);    
 }    

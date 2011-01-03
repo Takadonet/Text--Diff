@@ -27,6 +27,15 @@ multi sub text_diff($a,$b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
     return text_diff(@a,@b,%options);
 }
 
+multi sub text_diff(IO $a,IO $b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+    my @a=$a.lines();
+    my @b=$b.lines();
+    @a= @a >>~>> "\n";
+    @b= @b >>~>> "\n";    
+    
+    return text_diff(@a,@b,%options);    
+}    
+    
 multi sub text_diff_file($a,$b ,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
     my @a= lines(open($a)); 
     my @b= lines(open($b));

@@ -68,21 +68,30 @@ sub { ok !(text_diff_file $Af, $Af), 'no Diff' },
          flunk('Did not find a diff');
      }     
  },
-# sub { 
-#     open A1, "<$Af" or die $!;
-#     open A2, "<$Af" or die $!;
-#     ok !text_diff \*A1, \*A2;
-#     close A1;
-#     close A2;
-# },
-# sub { 
-#     open A, "<$Af" or die $!;
-#     open B, "<$Bf" or die $!;
-#     my $d = text_diff \*A, \*B;
-#     $d =~ /-4.*\+5/s ? ok 1 : ok $d, "a valid diff";
-#     close A;
-#     close B;
-# },
+sub {
+my $fha = open("$Af", :r);
+my $fha2 = open("$Af", :r);
+#passing file handles    
+ok !text_diff $fha, $fha2;
+
+$fha.close();
+$fha2.close(); 
+},
+sub {
+    my $fha = open("$Af", :r);
+    my $fhb = open("$Bf", :r);
+    #passing file handles
+    my $d = text_diff($fha, $fhb);
+    if $d ~~ /\-4.*\+5/ {
+        pass('a valid diff');
+    }
+    else {
+        flunk('Did not find a diff');
+    }     
+
+$fha.close();
+$fhb.close();     
+},
 # sub {
 #     ok !text_diff sub { \@A}, sub { \@A };
 # },

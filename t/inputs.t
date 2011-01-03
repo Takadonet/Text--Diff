@@ -106,9 +106,7 @@ sub {
 },
 );
 
-# plan tests => scalar @tests;
-
 $_.() for @tests;
 
- unlink $Af;
- unlink $Bf;
+unlink $Af;
+unlink $Bf;

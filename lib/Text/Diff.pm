@@ -2,13 +2,6 @@ package Text::Diff {
 use Text::Diff::OldStyle;
 use Text::Diff::Unified;
 use Algorithm::Diff;
-# BEGIN {
-# 	$VERSION = '1.37';
-# 	@ISA     = 'Exporter';
-# 	@EXPORT  = 'diff';
-# };
-
-
 
 my %internal_styles = (
      Unified  => Mu,
@@ -17,44 +10,41 @@ my %internal_styles = (
      Table    => Mu,   ## "internal", but in another module
 );
 
+subset Inputs of Any where { $_ ~~ Array|Str|IO|Code };
 
-multi sub text_diff($a,$b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
-    #quick and dirty way till i find a new signature that will do it for me
-    #also added the split probably bite me back later but it's making more tests pass
-    #todo fix me phil
-    my @a=$a.split("\n");
-    my @b=$b.split("\n");
-
-    return text_diff(@a,@b,%options);
+multi sub getInputs(Code $x) {
+    return $x.();
 }
 
-multi sub text_diff(IO $a,IO $b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
-    my @a=$a.lines();
-    my @b=$b.lines();
-    @a= @a >>~>> "\n";
-    @b= @b >>~>> "\n";    
-    
-    return text_diff(@a,@b,%options);    
-}    
+multi sub getInputs(IO $x) {
+    my @x=$x.lines();
+    @x= @x >>~>> "\n";
+    return @x;
+}
 
+multi sub getInputs($x) {
+    #also added the split probably bite me back later but it's making more tests pass
+    #todo fix me phil    
+    my @x=$x.split("\n");
+    return @x;
+}
 
-multi sub text_diff(Code $a,Code $b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
-    my @a=$a.();
-    my @b=$b.();
-    
-    return text_diff(@a,@b,%options);    
-}    
-    
+multi sub getInputs(@x) {
+    return @x;
+}
+
 multi sub text_diff_file($a,$b ,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
     my @a= lines(open($a)); 
     my @b= lines(open($b));
     @a= @a >>~>> "\n";
     @b= @b >>~>> "\n";
     return text_diff(@a,@b,%options);
-}
-    
+} 
+
 #todo had to change fcn now since we have a collision with Algorithm::Diff diff fcn. 
-multi sub text_diff(@a,@b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+multi sub text_diff(Inputs $a,Inputs $b,%options? = {'KEYGEN' => sub (*@a) {} }) is export {
+        my @a= getInputs($a);
+        my @b= getInputs($b);
 	## This is most efficient :)
         %options{"OFFSET_A"} = 0
         unless defined %options{"OFFSET_A"};

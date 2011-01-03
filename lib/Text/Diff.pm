@@ -56,26 +56,26 @@ multi sub text_diff(Inputs $a,Inputs $b,%options? = {'KEYGEN' => sub (*@a) {} })
 	my $output;
 	my $output_handler = %options{'OUTPUT'};
 	my $type = $output_handler.WHAT ;
-	if  ! defined $output_handler  {
+        if ! defined $output_handler {
 		$output = "";
 		$output_handler = sub { $output ~= shift @_ };
 	}
-	elsif ( $type eq "CODE" ) {
-		## No problems, mate.
-	}
-	elsif ( $type eq "SCALAR" ) {
-		say 'nyi for scalar output';
-#		my $out_ref = $output_handler;
-#		$output_handler = sub { $$out_ref .= shift };
-	}
-	elsif ( $type eq "ARRAY" ) {
-		my $out_ref = $output_handler;
-		$output_handler = sub { push @($out_ref), shift @_ };
-	}
-#     elsif ( $type eq "GLOB" || UNIVERSAL::isa $output_handler, "IO::Handle" ) {
-#         my $output_handle = $output_handler;
-#         $output_handler = sub { print $output_handle shift };
-#     }
+ 	elsif $type ~~ Code  {
+ 		## No problems, mate.
+ 	}
+# 	elsif ( $type eq "SCALAR" ) {
+# 		say 'nyi for scalar output';
+# #		my $out_ref = $output_handler;
+# #		$output_handler = sub { $$out_ref .= shift };
+# 	}
+ 	elsif $type ~~ Array {
+ 		my @out_ref := @($output_handler);
+ 		$output_handler = sub ($x) {push @out_ref, $x};
+ 	}
+        elsif $type ~~ IO {
+            my $output_handle = $output_handler;
+            $output_handler = sub ($x) {  $output_handle.print($x) };
+        }
 	else {
 		die "Unrecognized output type: $type";
 	}

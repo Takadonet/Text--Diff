@@ -85,11 +85,11 @@ multi sub text_diff(Inputs $a,Inputs $b,%options? = {'KEYGEN' => sub (*@a) {} })
 	$style = "Text::Diff::$style" if %internal_styles.exists($style);
 
 	#todo do not think the if statement below is working correctly
-	if  ! $style.can( "hunk" )  {
-		#eval "require $style; 1" or die $@;
-		require $style or die "Cannot import hunk";
+	# if  ! $style.can( "hunk" )  {
+	# 	#eval "require $style; 1" or die $@;
+        #     require ::($style) or die "Cannot import hunk";
 
-	}
+	# }
 	$style = $style.eval.new();
 #	if ! ref $style && $style.can( "new" );
 	my $ctx_lines = %options.{'CONTEXT'};
@@ -152,7 +152,7 @@ multi sub text_diff(Inputs $a,Inputs $b,%options? = {'KEYGEN' => sub (*@a) {} })
 
 	$output_handler.( $style.file_footer( @a,@b, %options ) ) if $hunks;
 
-	return defined $output ?? $output !! $hunks;
+	return  $output.defined ?? $output !! $hunks;
 }
 
 
@@ -332,7 +332,7 @@ role Text::Diff::Base {
 }
 
 
-=begin
+=begin pod
 
 =head1 NAME
 
@@ -654,4 +654,4 @@ License v 2.0 or greater.
 
 =cut
 
-=end 
+=end pod

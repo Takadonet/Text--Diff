@@ -307,7 +307,7 @@ package Text::Diff::Table{
 
 }
 
-=begin
+=begin pod
 
 =head1 NAME
 
@@ -405,4 +405,4 @@ version, or the Artistic license.
 
 =cut
 
-=end
+=end pod
